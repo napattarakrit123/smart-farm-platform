@@ -1,0 +1,6 @@
+import mqtt from 'mqtt'; import { Pool } from 'pg'; import { z } from 'zod'; import { createLogger } from '@smart-farm/logger';
+const log=createLogger('iot-gateway'); const pool=new Pool({connectionString:process.env.DATABASE_URL});
+const schema=z.object({deviceId:z.string(),plotId:z.string().optional(),sensorType:z.string(),value:z.number(),unit:z.string(),recordedAt:z.string().datetime().optional()});
+const client=mqtt.connect(process.env.MQTT_URL??'mqtt://localhost:1883',{username:process.env.MQTT_USERNAME,password:process.env.MQTT_PASSWORD});
+client.on('connect',()=>{client.subscribe('farms/+/devices/+/telemetry');log.info('mqtt connected')});
+client.on('message',async(topic,payload)=>{try{const x=schema.parse(JSON.parse(payload.toString())); const device=await pool.query('select id from "Device" where "deviceKey"=$1',[x.deviceId]); if(!device.rowCount){log.warn({deviceId:x.deviceId},'unknown device');return;} await pool.query('insert into "SensorReading"("deviceId","plotId","sensorType",value,unit,"recordedAt") values($1,$2,$3,$4,$5,$6)',[device.rows[0].id,x.plotId??null,x.sensorType,x.value,x.unit,x.recordedAt??new Date().toISOString()]); log.info({topic},'reading stored');}catch(err){log.error({err,topic},'invalid telemetry')}});

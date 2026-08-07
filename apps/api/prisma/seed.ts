@@ -1,0 +1,3 @@
+import { PrismaClient } from '@prisma/client'; const db=new PrismaClient();
+async function main(){ const farm=await db.farm.upsert({where:{id:'farm-demo'},update:{},create:{id:'farm-demo',name:'Demo Farm',location:'Bangkok',areaRai:12}}); const plot=await db.plot.upsert({where:{id:'plot-a'},update:{},create:{id:'plot-a',farmId:farm.id,name:'Plot A',crop:'Tomato',areaRai:4}}); const device=await db.device.upsert({where:{deviceKey:'dev-1'},update:{},create:{id:'device-1',deviceKey:'dev-1',name:'Soil Node 1',farmId:farm.id}}); await db.sensorReading.create({data:{deviceId:device.id,plotId:plot.id,sensorType:'soil_moisture',value:31,unit:'%',recordedAt:new Date()}}); }
+main().finally(()=>db.$disconnect());

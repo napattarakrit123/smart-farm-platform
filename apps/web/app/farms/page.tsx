@@ -1,0 +1,2 @@
+import { apiGet } from '../../lib/api';
+export default async function Farms(){ const r=await apiGet('/farms',{data:[{id:'farm-demo',name:'Demo Farm',location:'Bangkok',areaRai:12}]}); return <><h1>Farms</h1><table className="table"><thead><tr><th>Name</th><th>Location</th><th>Area</th></tr></thead><tbody>{r.data.map((f:any)=><tr key={f.id}><td>{f.name}</td><td>{f.location}</td><td>{f.areaRai} rai</td></tr>)}</tbody></table></>; }

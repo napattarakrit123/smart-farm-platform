@@ -1,0 +1,49 @@
+services:
+  postgres:
+    image: timescale/timescaledb:latest-pg16
+    environment: {POSTGRES_USER: smartfarm, POSTGRES_PASSWORD: smartfarm, POSTGRES_DB: smartfarm}
+    ports: ["5432:5432"]
+    volumes: [postgres_data:/var/lib/postgresql/data, ../database/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro]
+    healthcheck: {test: ["CMD-SHELL", "pg_isready -U smartfarm"], interval: 5s, timeout: 5s, retries: 20}
+  redis:
+    image: redis:7-alpine
+    ports: ["6379:6379"]
+  mqtt:
+    image: eclipse-mosquitto:2
+    ports: ["1883:1883", "9001:9001"]
+    volumes: [./mosquitto.conf:/mosquitto/config/mosquitto.conf:ro]
+  api:
+    build: {context: ../.., dockerfile: apps/api/Dockerfile}
+    environment: {DATABASE_URL: postgresql://smartfarm:smartfarm@postgres:5432/smartfarm, REDIS_URL: redis://redis:6379, AI_SERVICE_URL: http://ai-service:8000, PORT: 3001}
+    ports: ["3001:3001"]
+    depends_on: {postgres: {condition: service_healthy}}
+  web:
+    build: {context: ../.., dockerfile: apps/web/Dockerfile}
+    environment: {NEXT_PUBLIC_API_URL: http://localhost:3001/api}
+    ports: ["3000:3000"]
+    depends_on: [api]
+  ai-service:
+    build: {context: ../.., dockerfile: apps/ai-service/Dockerfile}
+    ports: ["8000:8000"]
+  worker:
+    build: {context: ../.., dockerfile: apps/worker/Dockerfile}
+    environment: {REDIS_URL: redis://redis:6379, AI_SERVICE_URL: http://ai-service:8000}
+    depends_on: [redis, ai-service]
+  scheduler:
+    build: {context: ../.., dockerfile: apps/scheduler/Dockerfile}
+    environment: {REDIS_URL: redis://redis:6379}
+    depends_on: [redis]
+  iot-gateway:
+    build: {context: ../.., dockerfile: apps/iot-gateway/Dockerfile}
+    environment: {MQTT_URL: mqtt://mqtt:1883, DATABASE_URL: postgresql://smartfarm:smartfarm@postgres:5432/smartfarm}
+    depends_on: [mqtt, postgres]
+  prometheus:
+    image: prom/prometheus:latest
+    ports: ["9090:9090"]
+    volumes: [../monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro]
+  grafana:
+    image: grafana/grafana:latest
+    ports: ["3002:3000"]
+    environment: {GF_SECURITY_ADMIN_PASSWORD: admin}
+    volumes: [../monitoring/grafana/provisioning:/etc/grafana/provisioning:ro]
+volumes: {postgres_data: {}}

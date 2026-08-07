@@ -1,0 +1,106 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Farm {
+  id        String   @id @default(cuid())
+  name      String
+  location  String
+  areaRai   Float
+  createdAt DateTime @default(now())
+
+  plots   Plot[]
+  devices Device[]
+  alerts  Alert[]
+}
+
+model Plot {
+  id           String   @id @default(cuid())
+  farmId       String
+  name         String
+  crop         String
+  areaRai      Float
+  plantingDate DateTime?
+  createdAt    DateTime @default(now())
+
+  farm Farm @relation(
+    fields: [farmId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  sensorReadings SensorReading[]
+
+  @@index([farmId])
+}
+
+model Device {
+  id        String   @id @default(cuid())
+  deviceKey String   @unique
+  name      String
+  farmId    String
+  status    String   @default("active")
+  createdAt DateTime @default(now())
+
+  farm Farm @relation(
+    fields: [farmId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  sensorReadings SensorReading[]
+
+  @@index([farmId])
+}
+
+model SensorReading {
+  id           BigInt   @id @default(autoincrement())
+  deviceId     String
+  plotId       String?
+  temperature  Float?
+  humidity     Float?
+  soilMoisture Float?
+  lightLevel   Float?
+  recordedAt   DateTime @default(now())
+
+  device Device @relation(
+    fields: [deviceId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  plot Plot? @relation(
+    fields: [plotId],
+    references: [id],
+    onDelete: SetNull
+  )
+
+  @@index([deviceId])
+  @@index([plotId])
+  @@index([recordedAt])
+}
+
+model Alert {
+  id         String    @id @default(cuid())
+  farmId     String
+  type       String
+  severity   String
+  message    String
+  status     String    @default("open")
+  createdAt  DateTime  @default(now())
+  resolvedAt DateTime?
+
+  farm Farm @relation(
+    fields: [farmId],
+    references: [id],
+    onDelete: Cascade
+  )
+
+  @@index([farmId])
+  @@index([status])
+}

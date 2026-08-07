@@ -1,0 +1,2 @@
+import { apiGet } from '../../lib/api';
+export default async function Recommendations(){ const r=await apiGet('/recommendations/irrigation',{data:[{plotId:'plot-a',action:'irrigate',waterLiters:320,reason:'Soil moisture below target',confidence:.91}]}); return <><h1>Irrigation Recommendations</h1>{r.data.map((x:any)=><article className="hero" key={x.plotId}><h2>{x.plotId}: {x.action}</h2><p>{x.waterLiters} liters — {x.reason}</p><span className="badge">confidence {(x.confidence*100).toFixed(0)}%</span></article>)}</>; }

@@ -1,0 +1,1 @@
+This starter Terraform creates the base VPC and ECR repositories. Add EKS/RDS/ElastiCache/MSK or managed MQTT modules according to production scale, compliance, and budget. Never store database passwords in source control; use a secret manager and encrypted remote state.

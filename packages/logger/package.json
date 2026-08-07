@@ -1,0 +1,19 @@
+{
+  "name": "@smart-farm/logger",
+  "version": "0.1.0",
+  "private": true,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "echo logger lint",
+    "test": "echo logger test"
+  },
+  "dependencies": {
+    "pino": "^9.6.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2"
+  }
+}

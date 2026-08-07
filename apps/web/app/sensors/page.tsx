@@ -1,0 +1,2 @@
+import { apiGet } from '../../lib/api';
+export default async function Sensors(){ const r=await apiGet('/sensors/latest',{data:[]}); return <><h1>Latest sensor readings</h1><table className="table"><thead><tr><th>Device</th><th>Type</th><th>Value</th><th>Time</th></tr></thead><tbody>{r.data.map((x:any)=><tr key={`${x.deviceId}-${x.sensorType}`}><td>{x.deviceId}</td><td>{x.sensorType}</td><td>{x.value} {x.unit}</td><td>{new Date(x.recordedAt).toLocaleString()}</td></tr>)}</tbody></table></>; }

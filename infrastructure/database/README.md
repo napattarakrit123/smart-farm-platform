@@ -1,0 +1,1 @@
+Run `pnpm --filter @smart-farm/api prisma migrate dev --name init`, then run the hypertable command in `init.sql`. For production, use migration files committed to source control and a separate least-privilege database role for each service.
